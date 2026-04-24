@@ -24,60 +24,65 @@
             --btn-primary: #0984e3;
             --btn-success: #00b894;
             --btn-warning: #e17055;
+            --btn-danger: #d63031;
             --btn-default: #b2bec3;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; user-select: none; }
-        
-        /* FIX: Allow body to scroll on very small screens if necessary, but prefer inner scrolling */
-        body { background: var(--bg-light); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg-light); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
 
         /* --- HEADER --- */
-        header { background: var(--bg-dark); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-shrink: 0; }
+        header { background: var(--bg-dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; position: sticky; top: 0; }
         .exam-title { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
         .timer-box { background: white; color: var(--st-visited); padding: 5px 15px; border-radius: 4px; font-weight: bold; font-size: 1.2rem; border: 2px solid var(--st-visited); }
 
         /* --- APP CONTAINER --- */
-        .app-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .app-container { display: flex; flex: 1; flex-direction: column; }
 
-        /* --- INSTRUCTIONS VIEW --- */
-        #instructions-view, #result-view { position: absolute; inset: 0; background: white; z-index: 100; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        /* --- INSTRUCTIONS & RESULT VIEW --- */
+        #instructions-view, #result-view { width: 100%; background: white; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; flex: 1; }
         .content-box { max-width: 800px; width: 100%; }
         .content-box h2 { color: var(--bg-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
         .content-box p, .content-box li { font-size: 1.1rem; line-height: 1.6; margin-bottom: 10px; }
         .content-box ul { margin-left: 20px; margin-bottom: 20px; }
         .legend-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; background: var(--bg-light); padding: 8px 15px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .start-form { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); }
+        .start-form { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .btn-start { background: var(--btn-primary); color: white; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; }
         .btn-start:disabled { background: var(--btn-default); cursor: not-allowed; }
+        .btn-reset { background: white; color: var(--btn-danger); border: 2px solid var(--btn-danger); padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
 
         /* --- EXAM VIEW --- */
-        #exam-view { display: none; width: 100%; height: 100%; flex-direction: row; }
+        #exam-view { display: none; width: 100%; max-width: 1400px; margin: 0 auto; flex-direction: row; align-items: flex-start; padding: 10px; gap: 10px; }
         
         /* Left Pane (Questions) */
-        /* FIX: Ensure min-height is 0 so flex child can shrink and scroll */
-        .left-pane { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); margin: 8px; border: 1px solid var(--border-color); border-radius: 4px; min-height: 0; }
-        .section-header { background: #eaf0f6; padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .section-header select { padding: 6px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+        .left-pane { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .section-header { background: #eaf0f6; padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; }
+        .section-header select { padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; width: 100%; max-width: 300px; }
         
-        /* FIX: Explicit overflow-y auto for the question content */
-        .question-area { flex: 1; padding: 25px; overflow-y: auto; }
+        .question-area { padding: 30px; }
         .q-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-        .q-text { font-size: 1.25rem; font-weight: 500; margin-bottom: 25px; line-height: 1.5; }
+        .q-text { font-size: 1.25rem; font-weight: 500; margin-bottom: 25px; line-height: 1.6; }
         
         .options-container { display: flex; flex-direction: column; gap: 12px; }
         .option-label { display: flex; align-items: flex-start; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; background: #fff; transition: 0.1s; }
         .option-label:hover { background: #f4f8ff; border-color: var(--btn-primary); }
         .option-label input { margin-top: 5px; margin-right: 15px; transform: scale(1.3); cursor: pointer; }
-        .opt-text { font-size: 1.1rem; }
+        .opt-text { font-size: 1.1rem; line-height: 1.4; }
 
-        .option-label.correct { background: #d4edda; border-color: #28a745; }
+        /* Review Mode Option Highlights */
+        .option-label.correct { background: #d4edda; border-color: #28a745; box-shadow: 0 0 10px rgba(40,167,69,0.2); }
         .option-label.incorrect { background: #f8d7da; border-color: #dc3545; }
 
+        /* Review Mode Feedback Box */
+        .review-feedback { display: none; margin-top: 20px; padding: 20px; border-radius: 5px; font-size: 1.15rem; line-height: 1.5; border-left: 5px solid transparent; }
+        .review-feedback.correct { background: #d4edda; color: #155724; border-left-color: #28a745; }
+        .review-feedback.incorrect { background: #f8d7da; color: #721c24; border-left-color: #dc3545; }
+        .review-feedback.unanswered { background: #fff3cd; color: #856404; border-left-color: #ffc107; }
+
         /* Action Bar */
-        .action-bar { border-top: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; background: #f8f9fa; flex-shrink: 0; }
-        .action-group { display: flex; gap: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; color: white; cursor: pointer; transition: 0.2s; }
+        .action-bar { border-top: 1px solid var(--border-color); padding: 20px; display: flex; justify-content: space-between; background: #f8f9fa; border-radius: 0 0 4px 4px; flex-wrap: wrap; gap: 10px; }
+        .action-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 12px 20px; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; color: white; cursor: pointer; transition: 0.2s; }
         .btn:hover { opacity: 0.9; }
         .btn-save { background: var(--btn-success); }
         .btn-mark { background: var(--btn-warning); }
@@ -85,20 +90,20 @@
         .btn-clear:hover { background: #eee; }
 
         /* Right Pane (Palette) */
-        /* FIX: min-height 0 to allow internal scrolling */
-        .right-pane { width: 320px; background: var(--panel-bg); margin: 8px 8px 8px 0; border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; min-height: 0; }
-        .profile-area { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: #fdfdfd; flex-shrink: 0; }
+        .right-pane { width: 340px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 80px; }
+        .profile-area { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: #fdfdfd; border-radius: 4px 4px 0 0; }
         .profile-pic { width: 55px; height: 55px; background: #dfe6e9; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2d3436; font-size: 1.2rem; }
         
-        .status-summary { padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; font-weight: 500; flex-shrink: 0; }
-        .stat-item { display: flex; align-items: center; justify-content: space-between; }
+        .status-summary { padding: 15px; border-bottom: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; font-weight: 500; }
+        .stat-item { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
         
-        /* FIX: Ensure palette container handles overflow properly */
-        .palette-container { padding: 15px; flex: 1; overflow-y: auto; background: var(--bg-light); }
-        .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .palette-container { padding: 15px; background: var(--bg-light); }
+        .palette-title { font-weight: bold; margin-bottom: 15px; color: var(--bg-dark); }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
         
-        .pal-btn { width: 100%; aspect-ratio: 1; border: 1px solid #ccc; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; color: white; }
-        .pal-btn.active { border: 3px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.4); transform: scale(1.05); z-index: 2; }
+        /* Palette Shapes */
+        .pal-btn { width: 100%; aspect-ratio: 1; border: 1px solid #ccc; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; color: white; transition: 0.1s; }
+        .pal-btn.active { border: 3px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.4); transform: scale(1.1); z-index: 2; }
         
         .st-0 { background: var(--st-not-visited); color: var(--text-main); border-radius: 4px; }
         .st-1 { background: var(--st-visited); border-radius: 50% 50% 0 0; }
@@ -107,7 +112,13 @@
         .st-4 { background: var(--st-marked); border-radius: 50%; }
         .st-4::after { content: ''; position: absolute; bottom: 0px; right: 0px; width: 12px; height: 12px; background: var(--st-answered); border-radius: 50%; border: 2px solid white; }
 
-        .shape { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; color: white; font-size: 0.75rem; font-weight: bold; position: relative; border: 1px solid #ccc; }
+        /* Review Mode Palette Shapes */
+        .rev-correct { background: var(--st-answered); color: white; border-radius: 4px; border: none; }
+        .rev-incorrect { background: var(--st-visited); color: white; border-radius: 4px; border: none; }
+        .rev-blank { background: var(--btn-warning); color: white; border-radius: 4px; border: none; }
+
+        /* Shape Legend Icons */
+        .shape { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; color: white; font-size: 0.75rem; font-weight: bold; position: relative; border: 1px solid #ccc; flex-shrink: 0; }
         .shape.st-0 { background: var(--st-not-visited); color: #333; border-radius: 3px; }
         .shape.st-1 { background: var(--st-visited); border-radius: 50% 50% 0 0; }
         .shape.st-2 { background: var(--st-answered); border-radius: 50% 50% 0 0; }
@@ -115,7 +126,7 @@
         .shape.st-4 { background: var(--st-marked); border-radius: 50%; }
         .shape.st-4::after { content: ''; position: absolute; bottom: -2px; right: -2px; width: 8px; height: 8px; background: var(--st-answered); border-radius: 50%; border: 1px solid white; }
 
-        .submit-area { padding: 15px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        .submit-area { padding: 15px; border-top: 1px solid var(--border-color); border-radius: 0 0 4px 4px; background: white; }
         .btn-submit { width: 100%; background: var(--btn-primary); padding: 12px; font-size: 1.1rem; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
 
         /* --- RESULT VIEW --- */
@@ -125,26 +136,18 @@
         .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 1.1rem; }
         .stats-table td { padding: 10px; border: 1px solid #eee; text-align: left; }
         .stats-table tr td:last-child { text-align: right; font-weight: bold; }
-        .btn-review { background: var(--st-marked); color: white; padding: 12px 25px; font-size: 1.1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-review { background: var(--st-marked); color: white; padding: 15px 25px; font-size: 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        /* FIX: RESPONSIVE BEHAVIOR */
-        @media (max-width: 900px) {
-            /* Change main container to scroll on mobile, stack panes */
-            body { overflow-y: auto; }
-            .app-container { overflow: visible; display: block; }
-            #exam-view { flex-direction: column; height: auto; }
-            
-            .left-pane { margin: 8px; flex: none; height: auto; }
-            .question-area { overflow-y: visible; padding: 15px; } /* Disable internal scroll on mobile */
-            
-            .right-pane { width: calc(100% - 16px); margin: 8px; flex: none; height: auto; display: block; }
-            .palette-container { height: 250px; overflow-y: auto; } /* Keep palette scrollable */
-            
-            .action-bar { flex-direction: column; }
-            .action-group { flex-direction: column; margin-bottom: 10px; }
+        /* RESPONSIVE */
+        @media (max-width: 950px) {
+            header { flex-direction: column; gap: 10px; text-align: center; position: static; }
+            #exam-view { flex-direction: column; }
+            .right-pane { width: 100%; position: static; margin-top: 10px; }
+            .section-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .section-header select { max-width: 100%; }
             .btn { width: 100%; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .section-header select { width: 100%; }
+            .action-bar { flex-direction: column; }
+            .action-group { flex-direction: column; width: 100%; }
         }
     </style>
 </head>
@@ -152,7 +155,7 @@
 
     <header>
         <div class="exam-title">NPTEL Mock CBT: Project Management</div>
-        <div class="timer-box" id="timer">--:--</div>
+        <div class="timer-box" id="timer">03:00:00</div>
     </header>
 
     <div class="app-container">
@@ -160,9 +163,14 @@
         <div id="instructions-view">
             <div class="content-box">
                 <h2>Examination Instructions</h2>
+                
+                <div id="resume-alert" style="display:none; background: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 5px; border: 1px solid #90caf9; margin-bottom: 20px; font-weight: bold;">
+                    ⚠️ Saved progress found! Your previous answers have been restored from local storage.
+                </div>
+
                 <p><strong>Please read carefully before proceeding:</strong></p>
                 <ul>
-                    <li>The countdown timer at the top right will display the time remaining for the selected module.</li>
+                    <li>The countdown timer is set to 3 Hours. Your progress is saved automatically.</li>
                     <li>The Question Palette displayed on the right side will show the status of each question using the following symbols:</li>
                 </ul>
                 
@@ -175,13 +183,12 @@
                 </div>
 
                 <div class="start-form">
-                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">
-                        <input type="checkbox" style="width: 20px; height: 20px;" onchange="document.getElementById('btn-start').disabled = !this.checked;">
+                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">
+                        <input type="checkbox" style="width: 25px; height: 25px; margin-top: 2px;" id="agree-check" onchange="document.getElementById('btn-start').disabled = !this.checked;">
                         I have read and understood the instructions. I am ready to begin.
                     </label>
-                    <div style="margin-top: 25px; text-align: center;">
-                        <button class="btn-start" id="btn-start" disabled onclick="startExam()">Start Examination</button>
-                    </div>
+                    <button class="btn-start" id="btn-start" disabled onclick="startExam()">Start / Resume Examination</button>
+                    <button class="btn-reset" onclick="clearStorage()">Reset Saved Progress</button>
                 </div>
             </div>
         </div>
@@ -189,7 +196,7 @@
         <div id="exam-view">
             <div class="left-pane">
                 <div class="section-header">
-                    <span style="font-weight: bold; color: var(--bg-dark);">Course Module Selection</span>
+                    <span style="font-weight: bold; color: var(--bg-dark); font-size: 1.1rem;">Course Module</span>
                     <select id="week-selector" onchange="changeWeek()">
                         <option value="1">Week 1: Project Initiation & Selection</option>
                         <option value="2">Week 2: Project Manager & Stakeholders</option>
@@ -205,10 +212,11 @@
                 <div class="question-area" id="q-area">
                     <div class="q-header">
                         <span id="q-num-label">Question 1</span>
-                        <span>Marks for correct answer: 1 | Negative Marks: 0</span>
+                        <span>Marks: +1 | Negative: 0</span>
                     </div>
                     <div class="q-text" id="q-text">Loading...</div>
                     <div class="options-container" id="options-container"></div>
+                    <div class="review-feedback" id="review-feedback"></div>
                 </div>
 
                 <div class="action-bar" id="action-bar">
@@ -222,14 +230,14 @@
 
             <div class="right-pane">
                 <div class="profile-area">
-                    <div class="profile-pic">DM</div>
+                    <div class="profile-pic">MG</div>
                     <div>
-                        <div style="font-weight: bold; font-size: 1.1rem;">Demo Student</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">ID: DEMOSTUD112</div>
+                        <div style="font-weight: bold; font-size: 1.1rem;">Mangaud</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">ID: MG-2026-IT</div>
                     </div>
                 </div>
                 
-                <div class="status-summary">
+                <div class="status-summary" id="status-summary">
                     <div class="stat-item"><div class="shape st-2"></div> <span id="count-2">0</span> Answered</div>
                     <div class="stat-item"><div class="shape st-1"></div> <span id="count-1">0</span> Not Answered</div>
                     <div class="stat-item"><div class="shape st-0"></div> <span id="count-0">0</span> Not Visited</div>
@@ -238,11 +246,11 @@
                 </div>
 
                 <div class="palette-container">
-                    <div style="font-weight: bold; margin-bottom: 10px;">Question Palette:</div>
+                    <div class="palette-title" id="palette-title">Question Palette:</div>
                     <div class="palette-grid" id="palette-grid"></div>
                 </div>
 
-                <div class="submit-area">
+                <div class="submit-area" id="submit-area">
                     <button class="btn-submit" onclick="submitExam()" id="btn-submit">Submit Exam</button>
                 </div>
             </div>
@@ -251,21 +259,21 @@
         <div id="result-view">
             <div class="score-box">
                 <h1 style="color: var(--bg-dark); margin-bottom: 10px;">Exam Submitted</h1>
-                <p style="color: var(--text-muted); margin-bottom: 20px;">Your responses for this module have been recorded.</p>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Your responses for this module have been evaluated.</p>
                 <div class="final-score" id="res-score">0 / 20</div>
                 <table class="stats-table">
                     <tr><td>Total Questions</td><td id="res-total">20</td></tr>
                     <tr><td>Questions Attempted</td><td id="res-attempted">0</td></tr>
                     <tr><td style="color: var(--st-answered);">Correct Answers</td><td id="res-correct" style="color: var(--st-answered);">0</td></tr>
-                    <tr><td style="color: var(--st-visited);">Incorrect Answers</td><td id="res-incorrect" style="color: var(--st-visited);">0</td></tr>
+                    <tr><td style="color: var(--st-visited);">Incorrect / Blank</td><td id="res-incorrect" style="color: var(--st-visited);">0</td></tr>
                 </table>
-                <button class="btn-review" onclick="enterReviewMode()">Review Answers</button>
+                <button class="btn-review" onclick="enterReviewMode()">Review All Answers</button>
             </div>
         </div>
     </div>
 
     <script>
-        // FULL 160 QUESTION DATABASE (8 Weeks x 20 Questions)
+        // FULL 160 QUESTION DATABASE
         const db = {
             1: [
                 { q: "In an agile project, teams deal with one requirement at a time in iterations called __________.", o: ["sprints", "deliverables", "WBS", "controls"], a: 0 },
@@ -446,50 +454,49 @@
         };
 
         // --- EXAM LOGIC & STATE MANAGEMENT ---
+        let allResponses = {}; 
+        let remainingSeconds = 3 * 60 * 60; // 3 hours
+        
         let currentWeek = 1;
         let questions = [];
-        let responses = []; // Stores { selected: index, status: 0-4 }
+        let responses = []; 
         let qIndex = 0;
         let timerInterval;
         let reviewMode = false;
 
-        function startExam() {
-            document.getElementById('instructions-view').style.display = 'none';
-            document.getElementById('exam-view').style.display = 'flex';
-            startTimer(45 * 60); // 45 Minutes per module
-            changeWeek(); 
+        // --- LOCAL STORAGE HANDLING ---
+        window.onload = () => {
+            let savedResponses = localStorage.getItem('nptel_cbt_responses');
+            let savedTime = localStorage.getItem('nptel_cbt_time');
+            
+            if (savedResponses) {
+                allResponses = JSON.parse(savedResponses);
+                if (savedTime) remainingSeconds = parseInt(savedTime);
+                document.getElementById('resume-alert').style.display = 'block';
+                document.getElementById('btn-start').innerText = "Resume Examination";
+            }
+        };
+
+        function saveProgress() {
+            localStorage.setItem('nptel_cbt_responses', JSON.stringify(allResponses));
+            localStorage.setItem('nptel_cbt_time', remainingSeconds);
         }
 
+        function clearStorage() {
+            if(confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
+                localStorage.removeItem('nptel_cbt_responses');
+                localStorage.removeItem('nptel_cbt_time');
+                location.reload(); 
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
         function startExam() {
             document.getElementById('instructions-view').style.display = 'none';
             document.getElementById('exam-view').style.display = 'flex';
             
-            // Set timer to 3 hours (3 hours * 60 minutes * 60 seconds)
-            startTimer(3 * 60 * 60); 
-            
+            startTimer(); 
             changeWeek(); 
-        }
-
-        function startTimer(seconds) {
-            let t = seconds;
-            timerInterval = setInterval(() => {
-                // Calculate Hours, Minutes, and Seconds
-                let h = Math.floor(t / 3600);
-                let m = Math.floor((t % 3600) / 60);
-                let s = t % 60;
-                
-                // Format with leading zeros (e.g., 03:05:09)
-                let hStr = h < 10 ? '0' + h : h;
-                let mStr = m < 10 ? '0' + m : m;
-                let sStr = s < 10 ? '0' + s : s;
-                
-                document.getElementById('timer').innerText = `${hStr}:${mStr}:${sStr}`;
-                
-                if(--t < 0) {
-                    clearInterval(timerInterval);
-                    processSubmit();
-                }
-            }, 1000);
         }
 
         function changeWeek() {
@@ -497,10 +504,14 @@
             currentWeek = parseInt(document.getElementById('week-selector').value);
             questions = db[currentWeek] || [];
             
-            // Init state for the 20 questions
-            responses = Array.from({ length: questions.length }, () => ({ selected: null, status: 0 }));
+            if(!allResponses[currentWeek]) {
+                allResponses[currentWeek] = Array.from({ length: questions.length }, () => ({ selected: null, status: 0 }));
+                if(questions.length > 0) allResponses[currentWeek][0].status = 1; 
+                saveProgress();
+            }
+            
+            responses = allResponses[currentWeek];
             qIndex = 0;
-            if(questions.length > 0) responses[0].status = 1; // First Q marked as visited (Not Answered)
             
             renderQuestion();
             renderPalette();
@@ -516,6 +527,7 @@
             document.getElementById('q-text').innerText = q.q;
 
             const optsDiv = document.getElementById('options-container');
+            const feedbackDiv = document.getElementById('review-feedback');
             optsDiv.innerHTML = '';
 
             q.o.forEach((optText, i) => {
@@ -526,10 +538,16 @@
                 radio.type = 'radio';
                 radio.name = 'opt';
                 radio.value = i;
+                
                 if(r.selected === i) radio.checked = true;
                 if(reviewMode) radio.disabled = true;
 
-                radio.onchange = () => { if(!reviewMode) responses[qIndex].selected = i; };
+                radio.onchange = () => { 
+                    if(!reviewMode) {
+                        responses[qIndex].selected = i; 
+                        saveProgress(); 
+                    }
+                };
 
                 label.appendChild(radio);
                 label.innerHTML += `<span class="opt-text">${String.fromCharCode(65+i)}. ${optText}</span>`;
@@ -542,6 +560,27 @@
                 optsDiv.appendChild(label);
             });
 
+            // Review Mode Feedback Text
+            if(reviewMode) {
+                feedbackDiv.style.display = 'block';
+                const correctLetter = String.fromCharCode(65 + q.a);
+                const correctText = q.o[q.a];
+                
+                if (r.selected === q.a) {
+                    feedbackDiv.className = 'review-feedback correct';
+                    feedbackDiv.innerHTML = `✅ <strong>Correct!</strong> You selected ${correctLetter}.`;
+                } else if (r.selected !== null) {
+                    const selectedLetter = String.fromCharCode(65 + r.selected);
+                    feedbackDiv.className = 'review-feedback incorrect';
+                    feedbackDiv.innerHTML = `❌ <strong>Incorrect.</strong> You chose ${selectedLetter}. The correct answer is <strong>${correctLetter}: ${correctText}</strong>.`;
+                } else {
+                    feedbackDiv.className = 'review-feedback unanswered';
+                    feedbackDiv.innerHTML = `⚠️ <strong>Not Answered.</strong> The correct answer is <strong>${correctLetter}: ${correctText}</strong>.`;
+                }
+            } else {
+                feedbackDiv.style.display = 'none';
+            }
+
             document.getElementById('q-area').scrollTop = 0;
         }
 
@@ -551,7 +590,18 @@
             
             questions.forEach((_, i) => {
                 const btn = document.createElement('div');
-                btn.className = `pal-btn st-${responses[i].status} ${i === qIndex ? 'active' : ''}`;
+                let extraClass = '';
+                
+                if (reviewMode) {
+                    // Change colors based on correct/incorrect during review
+                    if (responses[i].selected === questions[i].a) extraClass = 'rev-correct';
+                    else if (responses[i].selected !== null) extraClass = 'rev-incorrect';
+                    else extraClass = 'rev-blank';
+                } else {
+                    extraClass = `st-${responses[i].status}`;
+                }
+                
+                btn.className = `pal-btn ${extraClass} ${i === qIndex ? 'active' : ''}`;
                 btn.innerText = i + 1;
                 btn.onclick = () => jumpTo(i);
                 grid.appendChild(btn);
@@ -559,6 +609,7 @@
         }
 
         function updateSummary() {
+            if(reviewMode) return; // Summary isn't needed in review mode, hide or ignore
             let counts = [0,0,0,0,0];
             responses.forEach(r => counts[r.status]++);
             for(let i=0; i<=4; i++) document.getElementById(`count-${i}`).innerText = counts[i];
@@ -572,15 +623,14 @@
                 return;
             }
 
-            // If leaving without saving, wipe selection and set to Not Answered
-            if(responses[qIndex].status <= 1) {
-                responses[qIndex].selected = null;
-                responses[qIndex].status = 1;
+            if (responses[qIndex].selected !== null && responses[qIndex].status <= 1) {
+                responses[qIndex].status = 2; // Auto-save logic
             }
 
             qIndex = target;
             if(responses[qIndex].status === 0) responses[qIndex].status = 1;
 
+            saveProgress();
             renderQuestion();
             renderPalette();
             updateSummary();
@@ -597,6 +647,7 @@
             } else if(action === 'clear') {
                 responses[qIndex].selected = null;
                 responses[qIndex].status = 1;
+                saveProgress();
                 renderQuestion();
                 renderPalette();
                 updateSummary();
@@ -607,21 +658,30 @@
                 qIndex++;
                 if(responses[qIndex].status === 0) responses[qIndex].status = 1;
             } else {
-                alert("You have reached the end of the module. Click 'Submit Exam' when ready.");
+                alert("You have reached the end of the module. Change weeks in the dropdown or hit 'Submit Exam'.");
             }
 
+            saveProgress();
             renderQuestion();
             renderPalette();
             updateSummary();
         }
 
-        function startTimer(seconds) {
-            let t = seconds;
+        function startTimer() {
             timerInterval = setInterval(() => {
-                let m = Math.floor(t / 60);
-                let s = t % 60;
-                document.getElementById('timer').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
-                if(--t < 0) {
+                let h = Math.floor(remainingSeconds / 3600);
+                let m = Math.floor((remainingSeconds % 3600) / 60);
+                let s = remainingSeconds % 60;
+                
+                let hStr = h < 10 ? '0' + h : h;
+                let mStr = m < 10 ? '0' + m : m;
+                let sStr = s < 10 ? '0' + s : s;
+                
+                document.getElementById('timer').innerText = `${hStr}:${mStr}:${sStr}`;
+                
+                if(remainingSeconds % 5 === 0) saveProgress();
+
+                if(--remainingSeconds < 0) {
                     clearInterval(timerInterval);
                     processSubmit();
                 }
@@ -629,7 +689,7 @@
         }
 
         function submitExam() {
-            if(!reviewMode && confirm("Are you sure you want to submit? You cannot change your answers after submission.")) {
+            if(!reviewMode && confirm("Submit the exam? This will evaluate the currently selected module. You cannot change answers afterward.")) {
                 processSubmit();
             }
         }
@@ -641,7 +701,7 @@
 
             let score = 0, attempted = 0;
             responses.forEach((r, i) => {
-                if(r.status === 2 || r.status === 4) { // Answered or Ans+Marked
+                if(r.status === 2 || r.status === 4) {
                     attempted++;
                     if(r.selected === questions[i].a) score++;
                 }
@@ -651,7 +711,10 @@
             document.getElementById('res-total').innerText = questions.length;
             document.getElementById('res-attempted').innerText = attempted;
             document.getElementById('res-correct').innerText = score;
-            document.getElementById('res-incorrect').innerText = attempted - score;
+            document.getElementById('res-incorrect').innerText = questions.length - score;
+            
+            localStorage.removeItem('nptel_cbt_responses');
+            localStorage.removeItem('nptel_cbt_time');
         }
 
         function enterReviewMode() {
@@ -661,8 +724,11 @@
             
             document.getElementById('week-selector').disabled = true;
             document.getElementById('action-bar').style.display = 'none';
-            document.getElementById('btn-submit').style.display = 'none';
-            document.getElementById('timer').innerText = "REVIEW";
+            document.getElementById('submit-area').style.display = 'none';
+            document.getElementById('status-summary').style.display = 'none';
+            
+            document.getElementById('palette-title').innerText = "Review Palette (Green=Right, Red=Wrong):";
+            document.getElementById('timer').innerText = "REVIEW MODE";
             document.getElementById('timer').style.color = "var(--st-answered)";
             document.getElementById('timer').style.borderColor = "var(--st-answered)";
 
