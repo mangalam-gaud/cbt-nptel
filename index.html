@@ -448,6 +448,38 @@
             changeWeek(); 
         }
 
+        function startExam() {
+            document.getElementById('instructions-view').style.display = 'none';
+            document.getElementById('exam-view').style.display = 'flex';
+            
+            // Set timer to 3 hours (3 hours * 60 minutes * 60 seconds)
+            startTimer(3 * 60 * 60); 
+            
+            changeWeek(); 
+        }
+
+        function startTimer(seconds) {
+            let t = seconds;
+            timerInterval = setInterval(() => {
+                // Calculate Hours, Minutes, and Seconds
+                let h = Math.floor(t / 3600);
+                let m = Math.floor((t % 3600) / 60);
+                let s = t % 60;
+                
+                // Format with leading zeros (e.g., 03:05:09)
+                let hStr = h < 10 ? '0' + h : h;
+                let mStr = m < 10 ? '0' + m : m;
+                let sStr = s < 10 ? '0' + s : s;
+                
+                document.getElementById('timer').innerText = `${hStr}:${mStr}:${sStr}`;
+                
+                if(--t < 0) {
+                    clearInterval(timerInterval);
+                    processSubmit();
+                }
+            }, 1000);
+        }
+
         function changeWeek() {
             if(reviewMode) return;
             currentWeek = parseInt(document.getElementById('week-selector').value);
