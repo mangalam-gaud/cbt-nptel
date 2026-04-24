@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NPTEL CBT: Project Management</title>
+    <title>NPTEL Mock CBT: Project Management</title>
     <style>
         /* --- CSS VARIABLES & RESET --- */
         :root {
@@ -66,10 +66,11 @@
         .options-container { display: flex; flex-direction: column; gap: 12px; }
         .option-label { display: flex; align-items: flex-start; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; background: #fff; transition: 0.1s; }
         .option-label:hover { background: #f4f8ff; border-color: var(--btn-primary); }
+        .option-label.is-selected { background: #eef5ff; border-color: var(--btn-primary); box-shadow: 0 0 5px rgba(9, 132, 227, 0.2); }
         .option-label input { margin-top: 5px; margin-right: 15px; transform: scale(1.3); cursor: pointer; }
         .opt-text { font-size: 1.1rem; line-height: 1.4; }
 
-        /* Review Mode Option Highlights */
+        /* Review Mode Colors */
         .option-label.correct { background: #d4edda; border-color: #28a745; box-shadow: 0 0 10px rgba(40,167,69,0.2); }
         .option-label.incorrect { background: #f8d7da; border-color: #dc3545; }
 
@@ -165,7 +166,7 @@
                 <h2>Examination Instructions</h2>
                 
                 <div id="resume-alert" style="display:none; background: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 5px; border: 1px solid #90caf9; margin-bottom: 20px; font-weight: bold;">
-                    ⚠️ Saved progress found! Your previous answers have been restored from local storage.
+                    ⚠️ Saved progress found! Your previous answers have been restored.
                 </div>
 
                 <p><strong>Please read carefully before proceeding:</strong></p>
@@ -216,6 +217,7 @@
                     </div>
                     <div class="q-text" id="q-text">Loading...</div>
                     <div class="options-container" id="options-container"></div>
+                    
                     <div class="review-feedback" id="review-feedback"></div>
                 </div>
 
@@ -230,10 +232,10 @@
 
             <div class="right-pane">
                 <div class="profile-area">
-                    <div class="profile-pic">MG</div>
+                    <div class="profile-pic">DM</div>
                     <div>
-                        <div style="font-weight: bold; font-size: 1.1rem;">Mangaud</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">ID: MG-2026-IT</div>
+                        <div style="font-weight: bold; font-size: 1.1rem;">Demo Student</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">ID: DEMUSTUDENT2026</div>
                     </div>
                 </div>
                 
@@ -273,6 +275,16 @@
     </div>
 
     <script>
+        // ANTI-CHEATING SCRIPT (Basic protection against casual inspection)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+        }
+
         // FULL 160 QUESTION DATABASE
         const db = {
             1: [
@@ -539,28 +551,41 @@
                 radio.name = 'opt';
                 radio.value = i;
                 
-                if(r.selected === i) radio.checked = true;
+                // Highlight logic for currently selected
+                if(r.selected === i) {
+                    radio.checked = true;
+                    if(!reviewMode) label.classList.add('is-selected');
+                }
+                
                 if(reviewMode) radio.disabled = true;
 
                 radio.onchange = () => { 
                     if(!reviewMode) {
                         responses[qIndex].selected = i; 
                         saveProgress(); 
+                        renderQuestion(); // Re-render to update the blue highlight
                     }
                 };
 
                 label.appendChild(radio);
                 label.innerHTML += `<span class="opt-text">${String.fromCharCode(65+i)}. ${optText}</span>`;
 
+                // --- REVIEW MODE ENHANCEMENTS ---
                 if(reviewMode) {
-                    if(i === q.a) label.classList.add('correct');
-                    else if(r.selected === i) label.classList.add('incorrect');
+                    if(i === q.a) {
+                        label.classList.add('correct');
+                        label.innerHTML += `<span style="color: #155724; font-weight: bold; margin-left: auto;"> ✔ Correct Answer</span>`;
+                    }
+                    else if(r.selected === i) {
+                        label.classList.add('incorrect');
+                        label.innerHTML += `<span style="color: #721c24; font-weight: bold; margin-left: auto;"> ❌ Your Answer</span>`;
+                    }
                 }
 
                 optsDiv.appendChild(label);
             });
 
-            // Review Mode Feedback Text
+            // Review Mode explicit text feedback below options
             if(reviewMode) {
                 feedbackDiv.style.display = 'block';
                 const correctLetter = String.fromCharCode(65 + q.a);
@@ -572,7 +597,7 @@
                 } else if (r.selected !== null) {
                     const selectedLetter = String.fromCharCode(65 + r.selected);
                     feedbackDiv.className = 'review-feedback incorrect';
-                    feedbackDiv.innerHTML = `❌ <strong>Incorrect.</strong> You chose ${selectedLetter}. The correct answer is <strong>${correctLetter}: ${correctText}</strong>.`;
+                    feedbackDiv.innerHTML = `❌ <strong>Incorrect.</strong> You chose ${selectedLetter}. The right answer is <strong>${correctLetter}: ${correctText}</strong>.`;
                 } else {
                     feedbackDiv.className = 'review-feedback unanswered';
                     feedbackDiv.innerHTML = `⚠️ <strong>Not Answered.</strong> The correct answer is <strong>${correctLetter}: ${correctText}</strong>.`;
@@ -593,7 +618,6 @@
                 let extraClass = '';
                 
                 if (reviewMode) {
-                    // Change colors based on correct/incorrect during review
                     if (responses[i].selected === questions[i].a) extraClass = 'rev-correct';
                     else if (responses[i].selected !== null) extraClass = 'rev-incorrect';
                     else extraClass = 'rev-blank';
@@ -606,16 +630,19 @@
                 btn.onclick = () => jumpTo(i);
                 grid.appendChild(btn);
             });
+
+            if(!reviewMode) updateSummary();
         }
 
         function updateSummary() {
-            if(reviewMode) return; // Summary isn't needed in review mode, hide or ignore
             let counts = [0,0,0,0,0];
             responses.forEach(r => counts[r.status]++);
             for(let i=0; i<=4; i++) document.getElementById(`count-${i}`).innerText = counts[i];
         }
 
         function jumpTo(target) {
+            if (target < 0 || target >= questions.length) return;
+
             if(reviewMode) {
                 qIndex = target;
                 renderQuestion();
@@ -633,7 +660,6 @@
             saveProgress();
             renderQuestion();
             renderPalette();
-            updateSummary();
         }
 
         function handleAction(action) {
@@ -650,7 +676,6 @@
                 saveProgress();
                 renderQuestion();
                 renderPalette();
-                updateSummary();
                 return;
             }
 
@@ -664,7 +689,6 @@
             saveProgress();
             renderQuestion();
             renderPalette();
-            updateSummary();
         }
 
         function startTimer() {
@@ -713,6 +737,7 @@
             document.getElementById('res-correct').innerText = score;
             document.getElementById('res-incorrect').innerText = questions.length - score;
             
+            // Clear storage upon submission so the next run is fresh
             localStorage.removeItem('nptel_cbt_responses');
             localStorage.removeItem('nptel_cbt_time');
         }
@@ -723,7 +748,6 @@
             document.getElementById('exam-view').style.display = 'flex';
             
             document.getElementById('week-selector').disabled = true;
-            document.getElementById('action-bar').style.display = 'none';
             document.getElementById('submit-area').style.display = 'none';
             document.getElementById('status-summary').style.display = 'none';
             
@@ -732,10 +756,16 @@
             document.getElementById('timer').style.color = "var(--st-answered)";
             document.getElementById('timer').style.borderColor = "var(--st-answered)";
 
+            // Update action bar for easy navigation during review
+            document.getElementById('action-bar').innerHTML = `
+                <div class="action-group" style="width: 100%; display: flex; justify-content: space-between;">
+                    <button class="btn btn-clear" style="border: 2px solid var(--border-color); font-size: 1.1rem; padding: 12px 30px;" onclick="jumpTo(qIndex - 1)">⬅ Previous Question</button>
+                    <button class="btn btn-save" style="font-size: 1.1rem; padding: 12px 30px;" onclick="jumpTo(qIndex + 1)">Next Question ➡</button>
+                </div>
+            `;
+
             qIndex = 0;
             renderQuestion();
             renderPalette();
         }
     </script>
-</body>
-</html>
