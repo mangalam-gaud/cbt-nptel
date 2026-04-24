@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPTEL CBT: Project Management</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-dark: #1e2b3c;
+            --bg-light: #f4f7f6;
+            --panel-bg: #ffffff;
+            --border-color: #d1d8e0;
+            --text-main: #2f3640;
+            --text-muted: #718093;
+            
+            /* Status Colors */
+            --st-visited: #e74c3c;    /* Red: Not Answered */
+            --st-answered: #27ae60;   /* Green: Answered */
+            --st-marked: #8e44ad;     /* Purple: Marked */
+            --st-not-visited: #f1f2f6;/* Grey: Not Visited */
+            
+            /* Button Colors */
+            --btn-primary: #0984e3;
+            --btn-success: #00b894;
+            --btn-warning: #e17055;
+            --btn-default: #b2bec3;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; user-select: none; }
+        body { background: var(--bg-light); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- HEADER --- */
+        header { background: var(--bg-dark); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+        .exam-title { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        .timer-box { background: white; color: var(--st-visited); padding: 5px 15px; border-radius: 4px; font-weight: bold; font-size: 1.2rem; border: 2px solid var(--st-visited); }
+
+        /* --- APP CONTAINER --- */
+        .app-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* --- INSTRUCTIONS VIEW --- */
+        #instructions-view, #result-view { position: absolute; inset: 0; background: white; z-index: 100; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        .content-box { max-width: 800px; width: 100%; }
+        .content-box h2 { color: var(--bg-dark); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .content-box p, .content-box li { font-size: 1.1rem; line-height: 1.6; margin-bottom: 10px; }
+        .content-box ul { margin-left: 20px; margin-bottom: 20px; }
+        .legend-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; background: var(--bg-light); padding: 8px 15px; border-radius: 5px; border: 1px solid var(--border-color); }
+        .start-form { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); }
+        .btn-start { background: var(--btn-primary); color: white; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .btn-start:disabled { background: var(--btn-default); cursor: not-allowed; }
+
+        /* --- EXAM VIEW --- */
+        #exam-view { display: none; width: 100%; height: 100%; }
+        
+        /* Left Pane (Questions) */
+        .left-pane { flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); margin: 8px; border: 1px solid var(--border-color); border-radius: 4px; }
+        .section-header { background: #eaf0f6; padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .section-header select { padding: 6px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .question-area { flex: 1; padding: 25px; overflow-y: auto; }
+        .q-header { display: flex; justify-content: space-between; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .q-text { font-size: 1.25rem; font-weight: 500; margin-bottom: 25px; line-height: 1.5; }
+        
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-label { display: flex; align-items: flex-start; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; background: #fff; transition: 0.1s; }
+        .option-label:hover { background: #f4f8ff; border-color: var(--btn-primary); }
+        .option-label input { margin-top: 5px; margin-right: 15px; transform: scale(1.3); cursor: pointer; }
+        .opt-text { font-size: 1.1rem; }
+
+        /* Review Mode Colors */
+        .option-label.correct { background: #d4edda; border-color: #28a745; }
+        .option-label.incorrect { background: #f8d7da; border-color: #dc3545; }
+
+        /* Action Bar */
+        .action-bar { border-top: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; background: #f8f9fa; }
+        .action-group { display: flex; gap: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; color: white; cursor: pointer; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-save { background: var(--btn-success); }
+        .btn-mark { background: var(--btn-warning); }
+        .btn-clear { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-clear:hover { background: #eee; }
+
+        /* Right Pane (Palette) */
+        .right-pane { width: 320px; background: var(--panel-bg); margin: 8px 8px 8px 0; border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; }
+        .profile-area { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: #fdfdfd; }
+        .profile-pic { width: 55px; height: 55px; background: #dfe6e9; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2d3436; font-size: 1.2rem; }
+        
+        .status-summary { padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; font-weight: 500; }
+        .stat-item { display: flex; align-items: center; justify-content: space-between; }
+        
+        .palette-container { padding: 15px; flex: 1; overflow-y: auto; background: var(--bg-light); }
+        .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        /* Palette Shapes */
+        .pal-btn { width: 100%; aspect-ratio: 1; border: 1px solid #ccc; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; color: white; }
+        .pal-btn.active { border: 3px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.4); transform: scale(1.05); z-index: 2; }
+        
+        .st-0 { background: var(--st-not-visited); color: var(--text-main); border-radius: 4px; }
+        .st-1 { background: var(--st-visited); border-radius: 50% 50% 0 0; }
+        .st-2 { background: var(--st-answered); border-radius: 50% 50% 0 0; }
+        .st-3 { background: var(--st-marked); border-radius: 50%; }
+        .st-4 { background: var(--st-marked); border-radius: 50%; }
+        .st-4::after { content: ''; position: absolute; bottom: 0px; right: 0px; width: 12px; height: 12px; background: var(--st-answered); border-radius: 50%; border: 2px solid white; }
+
+        /* Shape Legend Icons */
+        .shape { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; color: white; font-size: 0.75rem; font-weight: bold; position: relative; border: 1px solid #ccc; }
+        .shape.st-0 { background: var(--st-not-visited); color: #333; border-radius: 3px; }
+        .shape.st-1 { background: var(--st-visited); border-radius: 50% 50% 0 0; }
+        .shape.st-2 { background: var(--st-answered); border-radius: 50% 50% 0 0; }
+        .shape.st-3 { background: var(--st-marked); border-radius: 50%; }
+        .shape.st-4 { background: var(--st-marked); border-radius: 50%; }
+        .shape.st-4::after { content: ''; position: absolute; bottom: -2px; right: -2px; width: 8px; height: 8px; background: var(--st-answered); border-radius: 50%; border: 1px solid white; }
+
+        .submit-area { padding: 15px; border-top: 1px solid var(--border-color); }
+        .btn-submit { width: 100%; background: var(--btn-primary); padding: 12px; font-size: 1.1rem; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+
+        /* --- RESULT VIEW --- */
+        #result-view { display: none; justify-content: center; text-align: center; }
+        .score-box { background: white; padding: 40px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .final-score { font-size: 4rem; font-weight: bold; color: var(--st-answered); margin: 20px 0; }
+        .stats-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 1.1rem; }
+        .stats-table td { padding: 10px; border: 1px solid #eee; text-align: left; }
+        .stats-table tr td:last-child { text-align: right; font-weight: bold; }
+        .btn-review { background: var(--st-marked); color: white; padding: 12px 25px; font-size: 1.1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            #exam-view { flex-direction: column; }
+            .right-pane { width: 100%; margin: 0; flex-direction: row; flex-wrap: wrap; height: auto; }
+            .profile-area, .status-summary, .submit-area { width: 100%; }
+            .palette-container { height: 180px; width: 100%; }
+            .action-bar { flex-direction: column; }
+            .action-group { flex-direction: column; margin-bottom: 10px; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="exam-title">NPTEL Mock CBT: Project Management</div>
+        <div class="timer-box" id="timer">--:--</div>
+    </header>
+
+    <div class="app-container">
+        
+        <div id="instructions-view">
+            <div class="content-box">
+                <h2>Examination Instructions</h2>
+                <p><strong>Please read carefully before proceeding:</strong></p>
+                <ul>
+                    <li>The countdown timer at the top right will display the time remaining for the selected module.</li>
+                    <li>The Question Palette displayed on the right side will show the status of each question using the following symbols:</li>
+                </ul>
+                
+                <div style="margin: 20px 0;">
+                    <div class="legend-row"><div class="shape st-0"></div> You have not visited the question yet.</div>
+                    <div class="legend-row"><div class="shape st-1"></div> You have visited, but not answered the question.</div>
+                    <div class="legend-row"><div class="shape st-2"></div> You have answered the question.</div>
+                    <div class="legend-row"><div class="shape st-3"></div> You have marked the question for review (without answering).</div>
+                    <div class="legend-row"><div class="shape st-4"></div> You have answered the question and marked it for review.</div>
+                </div>
+
+                <div class="start-form">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">
+                        <input type="checkbox" style="width: 20px; height: 20px;" onchange="document.getElementById('btn-start').disabled = !this.checked;">
+                        I have read and understood the instructions. I am ready to begin.
+                    </label>
+                    <div style="margin-top: 25px; text-align: center;">
+                        <button class="btn-start" id="btn-start" disabled onclick="startExam()">Start Examination</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="exam-view">
+            <div class="left-pane">
+                <div class="section-header">
+                    <span style="font-weight: bold; color: var(--bg-dark);">Course Module Selection</span>
+                    <select id="week-selector" onchange="changeWeek()">
+                        <option value="1">Week 1: Project Initiation & Selection</option>
+                        <option value="2">Week 2: Project Manager & Stakeholders</option>
+                        <option value="3">Week 3: Org Structure & Planning</option>
+                        <option value="4">Week 4: Feasibility & CPM</option>
+                        <option value="5">Week 5: PERT & Crashing</option>
+                        <option value="6">Week 6: Resource Levelling & Execution</option>
+                        <option value="7">Week 7: Controlling & Audit</option>
+                        <option value="8">Week 8: IT Tools & Benefits Realization</option>
+                    </select>
+                </div>
+                
+                <div class="question-area" id="q-area">
+                    <div class="q-header">
+                        <span id="q-num-label">Question 1</span>
+                        <span>Marks for correct answer: 1 | Negative Marks: 0</span>
+                    </div>
+                    <div class="q-text" id="q-text">Loading...</div>
+                    <div class="options-container" id="options-container"></div>
+                </div>
+
+                <div class="action-bar" id="action-bar">
+                    <div class="action-group">
+                        <button class="btn btn-mark" onclick="handleAction('mark')">Mark for Review & Next</button>
+                        <button class="btn btn-clear" onclick="handleAction('clear')">Clear Response</button>
+                    </div>
+                    <button class="btn btn-save" onclick="handleAction('save')">Save & Next</button>
+                </div>
+            </div>
+
+            <div class="right-pane">
+                <div class="profile-area">
+                    <div class="profile-pic">MG</div>
+                    <div>
+                        <div style="font-weight: bold; font-size: 1.1rem;">Mangaud</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">ID: MG-2026-IT</div>
+                    </div>
+                </div>
+                
+                <div class="status-summary">
+                    <div class="stat-item"><div class="shape st-2"></div> <span id="count-2">0</span> Answered</div>
+                    <div class="stat-item"><div class="shape st-1"></div> <span id="count-1">0</span> Not Answered</div>
+                    <div class="stat-item"><div class="shape st-0"></div> <span id="count-0">0</span> Not Visited</div>
+                    <div class="stat-item"><div class="shape st-3"></div> <span id="count-3">0</span> Marked</div>
+                    <div class="stat-item" style="grid-column: span 2;"><div class="shape st-4"></div> <span id="count-4">0</span> Answered & Marked</div>
+                </div>
+
+                <div class="palette-container">
+                    <div style="font-weight: bold; margin-bottom: 10px;">Question Palette:</div>
+                    <div class="palette-grid" id="palette-grid"></div>
+                </div>
+
+                <div class="submit-area">
+                    <button class="btn-submit" onclick="submitExam()" id="btn-submit">Submit Exam</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-view">
+            <div class="score-box">
+                <h1 style="color: var(--bg-dark); margin-bottom: 10px;">Exam Submitted</h1>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Your responses for this module have been recorded.</p>
+                <div class="final-score" id="res-score">0 / 20</div>
+                <table class="stats-table">
+                    <tr><td>Total Questions</td><td id="res-total">20</td></tr>
+                    <tr><td>Questions Attempted</td><td id="res-attempted">0</td></tr>
+                    <tr><td style="color: var(--st-answered);">Correct Answers</td><td id="res-correct" style="color: var(--st-answered);">0</td></tr>
+                    <tr><td style="color: var(--st-visited);">Incorrect Answers</td><td id="res-incorrect" style="color: var(--st-visited);">0</td></tr>
+                </table>
+                <button class="btn-review" onclick="enterReviewMode()">Review Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FULL 160 QUESTION DATABASE (8 Weeks x 20 Questions)
+        const db = {
+            1: [
+                { q: "In an agile project, teams deal with one requirement at a time in iterations called __________.", o: ["sprints", "deliverables", "WBS", "controls"], a: 0 },
+                { q: "A project with an NPV equal to zero will __________.", o: ["lose money", "exactly meet the required rate of return", "generate excessive cash inflows", "fail to return its initial investment"], a: 1 },
+                { q: "__________ is the process of evaluating individual projects or groups of projects and choosing to implement some set of them to achieve parent organisation objectives.", o: ["Project control", "Project initiation", "Project management", "Project selection"], a: 3 },
+                { q: "A project selected using the 'sacred cow' model is likely to be maintained until completed or until __________.", o: ["the project exceeds its budget", "the project falls behind schedule", "the boss recognises the project as a failure and terminates it", "the project manager is terminated"], a: 2 },
+                { q: "The pattern of project effort that begins slowly, accelerates in mid-phase, and tapers off near completion is known as the __________ pattern.", o: ["S-curve", "zig-zag curve", "linear curve", "stepped curve"], a: 0 },
+                { q: "If a company's predicted inflation rate goes down (deflation), what happens to their projects' net present value (NPV)?", o: ["Unchanged", "Goes up", "Goes down", "Positive NPV’s go up, negative NPV’s go down"], a: 1 },
+                { q: "According to Agile Principles, the most efficient and effective method of conveying information to and within a development team is __________.", o: ["Virtual Meeting", "Email", "Reports", "Face-to-face conversation"], a: 3 },
+                { q: "Which project selection model uses discounted cash flows to evaluate a project?", o: ["IRR", "Sacred cow", "Competitive necessity", "Checklist model"], a: 0 },
+                { q: "A project with an NPV less than zero will __________.", o: ["exactly meet the required rate of return", "lose money", "generate excessive cash inflows", "earn more than the required return"], a: 1 },
+                { q: "Projects are bound by the three objectives of scope, time, and cost. These are collectively referred to as the __________.", o: ["Triple Factors", "Triple Constraint", "Three Bottom", "Triple Play"], a: 1 },
+                { q: "A project is considered a __________ endeavor undertaken to create a unique product, service, or result.", o: ["permanent", "temporary", "ongoing", "continuous"], a: 1 },
+                { q: "The waterfall approach to project management is best described as:", o: ["Iterative and incremental", "Linear and sequential", "Highly adaptive to changes", "Unstructured"], a: 1 },
+                { q: "Which of the following is a non-numeric project selection model?", o: ["Payback period", "Net Present Value (NPV)", "Operating necessity", "Internal Rate of Return (IRR)"], a: 2 },
+                { q: "The Payback Period model of project selection ignores __________.", o: ["The initial cost of the project", "Cash flows occurring after the payback period", "The time it takes to recover the investment", "The project's basic feasibility"], a: 1 },
+                { q: "Which project selection model evaluates a project based on its ability to maintain the company's position in the market?", o: ["Sacred Cow", "Operating Necessity", "Competitive Necessity", "Comparative Benefit"], a: 2 },
+                { q: "The Q-Sort technique is an example of a __________ selection model.", o: ["Numeric", "Profitability", "Discounted cash flow", "Non-numeric"], a: 3 },
+                { q: "In the project lifecycle, the phase that generally consumes the most resources and effort is __________.", o: ["Conceptualization", "Planning", "Execution", "Termination"], a: 2 },
+                { q: "Which of the following describes a 'Project' rather than 'Operations'?", o: ["Manufacturing the same car model daily", "Processing employee payroll monthly", "Designing a new electric vehicle prototype", "Maintaining server uptime"], a: 2 },
+                { q: "A major disadvantage of the 'Checklist' model for project selection is __________.", o: ["It is too complex to use", "It ignores the time value of money", "It does not easily allow for ranking projects by relative importance", "It requires extensive financial data"], a: 2 },
+                { q: "If the Profitability Index (PI) of a project is greater than 1.0, the project should generally be __________.", o: ["Rejected", "Accepted", "Re-evaluated", "Considered a sacred cow"], a: 1 }
+            ],
+            2: [
+                { q: "The functional manager uses the __________ approach and the Project Manager uses the __________ approach.", o: ["systems; analytic", "numerical; nonnumeric", "analytic; systems", "nonnumeric; numerical"], a: 2 },
+                { q: "When managing a project, the project manager is responsible for __________.", o: ["auditing the project", "executing the project", "budgeting the project", "designing the project"], a: 2 },
+                { q: "During project build-up, the project should move from a general concept to __________.", o: ["implementation of plans", "a highly detailed set of plans", "a project charter", "a project contract"], a: 1 },
+                { q: "Which of the following is not a phase in the Tuckman ladder?", o: ["forming", "defining", "norming", "mourning"], a: 1 },
+                { q: "The ideal project manager should be __________.", o: ["a direct, technical supervisor", "a generalist/facilitator with high technical competence", "a specialist with technical credibility", "a technical specialist competent in robust design"], a: 1 },
+                { q: "Toward the end of the project lifecycle, conflict intensity is the greatest with respect to __________.", o: ["cost", "schedules", "scope", "Quality"], a: 1 },
+                { q: "______________is a method of transforming contractual relationships into a cohesive, cooperative project team with a single set of goals.", o: ["Project partnering", "Chartering", "Meeting", "Stakeholder management"], a: 0 },
+                { q: "A(n) __________ is a written agreement between the PM, senior management, and functional managers committing resources.", o: ["project charter", "project summary", "scope plan", "partner agreement"], a: 0 },
+                { q: "__________ problems are comparatively rare during project phase-out because most have been solved or bypassed earlier.", o: ["Resource", "Schedule", "Authority", "Technical"], a: 3 },
+                { q: "Which leadership quality encompasses vision, imagination, and strategic perspective?", o: ["Intellectual quality", "Managerial quality", "Emotional quality", "Physical quality"], a: 0 },
+                { q: "In project management, conflict is __________.", o: ["Always detrimental", "Inevitable and sometimes beneficial", "Easily avoided", "Only caused by technical disagreements"], a: 1 },
+                { q: "The primary goal of negotiation in project management should be to achieve a __________ outcome.", o: ["Win-Lose", "Compromise", "Win-Win", "Lose-Lose"], a: 2 },
+                { q: "A project 'stakeholder' is defined as __________.", o: ["Only the financial sponsors", "Anyone working on the project tasks", "Any individual or group impacted by the project", "Only the end-users of the product"], a: 2 },
+                { q: "According to the Tuckman ladder, the phase where team members begin to resolve conflicts and establish ground rules is __________.", o: ["Forming", "Storming", "Norming", "Performing"], a: 2 },
+                { q: "Which type of power is derived from the Project Manager's formal position within the organizational hierarchy?", o: ["Expert power", "Referent power", "Legitimate power", "Reward power"], a: 2 },
+                { q: "Resolving conflict by emphasizing areas of agreement and avoiding areas of disagreement is known as __________.", o: ["Forcing", "Smoothing", "Compromising", "Confronting"], a: 1 },
+                { q: "Effective Project Managers typically spend the vast majority (often 80-90%) of their time __________.", o: ["Writing code", "Communicating", "Calculating budgets", "Updating software"], a: 1 },
+                { q: "A Project Charter is typically formally authorized and issued by the __________.", o: ["Project Manager", "Project Team", "Project Sponsor or Senior Management", "Client"], a: 2 },
+                { q: "In the 'Matrix' organizational structure, a project team member often faces the challenge of __________.", o: ["Having no manager", "Dual reporting (to PM and Functional Manager)", "Working strictly in isolation", "Total authority over the budget"], a: 1 },
+                { q: "Which of the following is considered a 'soft skill' critical for a Project Manager?", o: ["Critical Path Calculation", "Budget Forecasting", "Emotional Intelligence", "Software Programming"], a: 2 }
+            ],
+            3: [
+                { q: "A major advantage of using a functional placement for a project is that __________.", o: ["PM has full authority", "individual experts can be utilized by many different projects", "communication paths are simple", "project is completely isolated from parent firm"], a: 1 },
+                { q: "The __________ organizational form is a pure project organization overlaid on the functional divisions of the parent firm.", o: ["matrix", "functional", "mixed-matrix", "projectized"], a: 0 },
+                { q: "The process of dealing with uncertainties in projects that may affect the project for better or worse is __________.", o: ["scope management", "risk management", "quality management", "procurement management"], a: 1 },
+                { q: "The __________is a list of the project activities with major activities broken down into subactivities.", o: ["linear responsibility chart", "PCMCIA", "activity prioritization", "WBS (Work Breakdown Structure)"], a: 3 },
+                { q: "Integration management involves __________.", o: ["Keeping the project isolated", "Coordinating all project elements and changes", "Firing team members", "Outsourcing all tasks"], a: 1 },
+                { q: "Which organizational structure provides the Project Manager with the maximum level of authority?", o: ["Weak Matrix", "Strong Matrix", "Functional", "Projectized"], a: 3 },
+                { q: "The phenomenon where team members worry about their job security as a project nears completion is most common in a __________ organization.", o: ["Functional", "Projectized", "Weak Matrix", "Hierarchical"], a: 1 },
+                { q: "The first step in traditional project activity planning is usually __________.", o: ["Estimating costs", "Assigning personnel", "Defining the project scope", "Crashing the schedule"], a: 2 },
+                { q: "In Agile project planning, the overarching document that guides the project vision without detailing every task is the __________.", o: ["Project Charter", "Product Backlog", "Gantt Chart", "Sprint Retrospective"], a: 0 },
+                { q: "A key benefit of a mixed-matrix organization is that it __________.", o: ["Eliminates all conflicts", "Allows mixing functional and projectized forms to meet special needs", "Requires no project manager", "Is the easiest structure to implement"], a: 1 },
+                { q: "Human factors in project management dictate that a team's performance heavily depends on __________.", o: ["Only the salary provided", "Motivation, communication, and trust", "The strictness of the PM", "The software tools used"], a: 1 },
+                { q: "A Work Breakdown Structure (WBS) is best described as __________.", o: ["A chronological list of tasks", "A hierarchical decomposition of the total scope of work", "A risk assessment matrix", "A budget tracking tool"], a: 1 },
+                { q: "When standard departments in a firm represent individual disciplines, the firm uses __________ management.", o: ["Projectized", "Functional", "Matrixed", "Mixed"], a: 1 },
+                { q: "Which organizational form is apt to be preferred when a firm engages in a large number of similar, standard projects?", o: ["Pure project", "Partial matrix", "Functional", "Mixed matrix"], a: 0 },
+                { q: "In a Strong Matrix organization, the balance of power shifts towards the __________.", o: ["Functional Manager", "Project Manager", "Project Sponsor", "Team Members"], a: 1 },
+                { q: "Agile project planning is characterized by __________.", o: ["Rigid adherence to the initial plan", "Iterative and adaptive planning cycles", "Top-down micromanagement", "Extensive upfront documentation"], a: 1 },
+                { q: "Coordination through integration management ensures that __________.", o: ["Every team member works independently", "Changes in one area are reflected and managed across the entire project", "Costs are minimized at the expense of quality", "The project is finished early"], a: 1 },
+                { q: "Which is an advantage of placing a project within a functional division?", o: ["The PM has full control", "Maximum flexibility in the use of staff", "The project is the center of attention", "Cross-departmental communication is very fast"], a: 1 },
+                { q: "A disadvantage of the matrix organizational form is that __________.", o: ["It violates the unity of command principle", "It prevents cross-functional collaboration", "It gives the PM too much power", "It isolates the project from the parent organization"], a: 0 },
+                { q: "The lowest level of decomposition in a Work Breakdown Structure (WBS) is called a __________.", o: ["Deliverable", "Milestone", "Work Package", "Sub-task"], a: 2 }
+            ],
+            4: [
+                { q: "A work element requires 50 hours of labor by four carpenters. Paid $15/hr, overhead rate 80%. Total cost is __________.", o: ["$2,400", "$3,000", "$4,600", "$5,400"], a: 3 },
+                { q: "The difference between the late start and early start for an activity is called its __________.", o: ["critical path", "task", "progress", "slack/float"], a: 3 },
+                { q: "Which type of project has the critical path method (CPM) primarily been used for?", o: ["Construction", "Manufacturing", "Industrial", "Research and development"], a: 0 },
+                { q: "A(n) __________ is a specific task or set of tasks required by the project, using resources and taking time.", o: ["milestone", "activity", "node", "path"], a: 1 },
+                { q: "Which is the backward pass rule?", o: ["Earliest start = largest early finish of predecessors", "Latest start = smallest late start of successors", "Variance is calculated first", "Slack must be negative"], a: 1 },
+                { q: "Project feasibility analysis is undertaken to determine __________.", o: ["If the PM is qualified", "If the project is technically, economically, and legally viable", "The exact final cost of the project", "Who will be in the project team"], a: 1 },
+                { q: "Which estimating technique uses individuals closer to the work to provide estimates?", o: ["Top-down budgeting", "Parametric estimating", "Bottom-up budgeting", "Analogous estimating"], a: 2 },
+                { q: "Project risk management includes all of the following subprocesses EXCEPT __________.", o: ["Risk identification", "Risk response planning", "Qualitative risk analysis", "WBS creation"], a: 3 },
+                { q: "A standard rule in network diagramming states that an activity cannot begin until __________.", o: ["The budget is approved", "All of its immediate predecessors are complete", "The PM gives permission", "The critical path is identified"], a: 1 },
+                { q: "Which of the following is NOT a technique used for quantitative risk assessment?", o: ["Monte Carlo simulation", "Decision tree analysis", "Sensitivity analysis", "Brainstorming"], a: 3 },
+                { q: "In top-down budgeting, the budget is typically established by __________.", o: ["The project team members", "External consultants", "Upper and middle management", "The client"], a: 2 },
+                { q: "A 'Milestone' in a project network represents __________.", o: ["A task that takes the longest time", "An identifiable end state occurring at a particular time, using zero resources", "The start of the critical path", "A risk event"], a: 1 },
+                { q: "The critical path is defined as the __________ path through a network diagram.", o: ["Shortest duration", "Longest duration", "Most expensive", "Least risky"], a: 1 },
+                { q: "If an activity has an Early Start of 5, a duration of 4, and a Late Finish of 12, what is its total slack (float)?", o: ["0", "3", "7", "12"], a: 1 },
+                { q: "Which is NOT generally considered a valid reason for project failure during feasibility analysis?", o: ["Lack of technical capacity", "Inadequate budget", "Having too many skilled workers available", "Regulatory roadblocks"], a: 2 },
+                { q: "A project budget serves as a standard for __________.", o: ["Firing team members", "Comparison of planned versus actual usage of resources", "Guaranteeing a profit", "Changing the project scope"], a: 1 },
+                { q: "Risk identification is the process of __________.", o: ["Determining risks affecting the project and documenting characteristics", "Assigning a dollar value to every risk", "Eliminating all risks", "Transferring risks to a third party"], a: 0 },
+                { q: "In a network diagram, a 'dummy activity' is used to __________.", o: ["Show unimportant tasks", "Indicate precedence relationships without consuming time or resources", "Represent external dependencies", "Act as a placeholder"], a: 1 },
+                { q: "Estimating project budgets accurately is difficult primarily because __________.", o: ["Accounting software is flawed", "Every project is a unique endeavor with inherent uncertainties", "PMs ignore historical data", "Clients change their minds"], a: 1 },
+                { q: "Sensitivity analysis in quantitative risk assessment helps to __________.", o: ["Simulate thousands of possible outcomes", "Determine which variables have the greatest potential impact", "Graph the timeline", "Calculate exact completion date"], a: 1 }
+            ],
+            5: [
+                { q: "If crash cost is $2400, normal cost is $1200, crash time is 4 days, normal time is 8 days, what is the cost slope?", o: ["200", "300", "350", "400"], a: 1 },
+                { q: "Which statement best describes the difference between PERT and CPM?", o: ["PERT focuses on costs; CPM on time", "CPM is probabilistic; PERT is deterministic", "PERT is probabilistic; CPM is deterministic", "Both use probabilistic durations"], a: 2 },
+                { q: "To shorten project duration at minimum cost, a manager should crash the __________.", o: ["cheapest activity on the critical path", "most expensive activity on any path", "longest non-critical activity", "activity with the largest slack"], a: 0 },
+                { q: "In PERT, expected time (Te) is calculated using the formula:", o: ["(a + b + c)/3", "(a + 4m + b)/6", "(b - a)/6", "(a + m + b)/6"], a: 1 },
+                { q: "Resource loading refers to __________.", o: ["smoothing of resource usage", "amounts of individual resources a schedule requires during specific periods", "firing of excess staff", "cost of resources"], a: 1 },
+                { q: "If an activity has estimates: optimistic=4, most likely=10, pessimistic=16. The expected PERT duration is __________ days.", o: ["8", "10", "11", "12"], a: 1 },
+                { q: "The formula for the variance of an activity in PERT is __________.", o: ["((a+b)/6)^2", "((b-a)/6)^2", "(b-a)^2 / 6", "(a-b)^2"], a: 1 },
+                { q: "In a PERT network, if the variance of the critical path is 16, what is the standard deviation of the project duration?", o: ["2", "4", "8", "16"], a: 1 },
+                { q: "Crashing a project typically results in __________.", o: ["Decrease in direct costs, increase in indirect costs", "Increase in direct costs, decrease in project duration", "No change in costs", "Decrease in both direct and indirect costs"], a: 1 },
+                { q: "A Gantt chart is primarily used for __________.", o: ["Calculating costs", "Visually displaying the schedule of activities against a timeline", "Identifying risks", "Documenting the charter"], a: 1 },
+                { q: "Scheduling with Scrum involves breaking work down into fixed-length iterations called __________.", o: ["Milestones", "Phases", "Sprints", "Crashing events"], a: 2 },
+                { q: "Risk analysis with simulation for scheduling most commonly uses __________.", o: ["Linear programming", "Monte Carlo simulation", "Decision tree analysis", "SWOT analysis"], a: 1 },
+                { q: "The formula for computing the cost/time slope for crashing is __________.", o: ["(crash cost + normal cost) / (time diff)", "(crash cost - normal cost) / (normal time - crash time)", "(normal cost - crash cost) / time diff", "normal cost / normal time"], a: 1 },
+                { q: "If you crash an activity that is NOT on the critical path, the project duration will __________.", o: ["Decrease", "Increase", "Remain unchanged", "Become negative"], a: 2 },
+                { q: "A primary limitation of traditional PERT analysis is that it __________.", o: ["Assumes unlimited resources", "Is too difficult to calculate", "Focuses only on costs", "Cannot be used for R&D"], a: 0 },
+                { q: "In PERT analysis, the 'pessimistic time' estimate assumes __________.", o: ["Everything goes perfectly", "Normal conditions apply", "Almost everything goes wrong", "The project is cancelled"], a: 2 },
+                { q: "Crashing is a schedule compression technique that involves __________.", o: ["Doing activities in parallel", "Adding resources to project activities to complete them faster", "Removing requirements", "Ignoring quality standards"], a: 1 },
+                { q: "The term 'Resource Allocation' generally implies that __________.", o: ["Resources are unlimited", "Resources are limited and must be distributed carefully", "Resources are only assigned at the end", "Human resources are not considered"], a: 1 },
+                { q: "Which tool provides a daily, visual representation of remaining work in an Agile (Scrum) project?", o: ["PERT Chart", "Burndown Chart", "Gantt Chart", "WBS"], a: 1 },
+                { q: "When using simulation for risk analysis in scheduling, the outcome provides a __________.", o: ["Single guaranteed completion date", "Probability distribution of possible completion dates", "List of required resources", "Final project budget"], a: 1 }
+            ],
+            6: [
+                { q: "If CPI (cost performance index) = 1.05, then __________ is favourable.", o: ["time variance", "schedule variance", "cost variance", "performance variance"], a: 2 },
+                { q: "In earned value analysis, Cost Variance (CV) is computed as __________.", o: ["Earned Value minus Actual Cost", "Planned Value minus Earned Value", "Actual Cost minus Planned Value", "Earned Value minus Planned Value"], a: 0 },
+                { q: "The longest path of sequentially time-dependent and resource-dependent activities is known as the ______________.", o: ["priority chain", "critical chain", "dependency path", "heuristic path"], a: 1 },
+                { q: "If Earned Value (EV) = $500, Actual Cost (AC) = $450, Planned Value (PV) = $475; the Schedule Performance Index (SPI) is __________.", o: ["1.05", "1.11", "0.95", "0.90"], a: 0 },
+                { q: "The Planning-Monitoring-Controlling cycle is considered a(n) __________ system.", o: ["Closed loop", "Open loop", "Static", "Linear"], a: 0 },
+                { q: "Resource levelling aims to __________.", o: ["Minimize project duration regardless of cost", "Smooth out resource usage over time without delaying the project if possible", "Fire excess staff immediately", "Increase the critical path"], a: 1 },
+                { q: "The 50-50 rule for measuring earned value assumes __________.", o: ["50% is earned when task starts, 50% when completed", "The task takes 50 days", "The budget is split 50/50", "The project has a 50% chance of success"], a: 0 },
+                { q: "The best sources of items to be monitored are the risk management plan, change of scope orders, and __________.", o: ["schedule/WBS", "the company newsletter", "competitor analysis", "employee attendance records"], a: 0 },
+                { q: "Schedule Variance (SV) is calculated as __________.", o: ["EV - AC", "PV - EV", "EV - PV", "AC - PV"], a: 2 },
+                { q: "If a project has an SPI of 0.85, the project is currently __________.", o: ["Ahead of schedule", "On schedule", "Behind schedule", "Under budget"], a: 2 },
+                { q: "Goldratt’s Critical Chain approach suggests removing safety buffers from individual tasks and placing a consolidated buffer at the __________.", o: ["Beginning of the project", "End of the project (Project Buffer)", "Middle of the project", "End of every week"], a: 1 },
+                { q: "Which behavioral phenomenon does Goldratt's Critical Chain attempt to mitigate?", o: ["Student Syndrome (delaying start until the last minute)", "The Halo Effect", "The Hawthorne Effect", "Groupthink"], a: 0 },
+                { q: "In resource-constrained scheduling, if resources are inadequate, the project duration will likely __________.", o: ["Decrease", "Remain the same", "Increase", "Become zero"], a: 2 },
+                { q: "Which agile tool visually represents the flow of work from 'To Do' to 'Done'?", o: ["Gantt Chart", "PERT Chart", "Kanban Board", "Network Diagram"], a: 2 },
+                { q: "The 'proportionality rule' in earned value analysis divides the actual task time-to-date by the __________ to calculate percent complete.", o: ["total project budget", "scheduled time for the task", "number of workers", "actual cost"], a: 1 },
+                { q: "A project control process should run continuously until __________.", o: ["The project budget is depleted", "The project is formally completed/closed", "The first major problem occurs", "The PM is promoted"], a: 1 },
+                { q: "If a project has a CPI of 0.90, it means that __________.", o: ["The project is costing 10% less than planned", "The project is earning 90 cents for every dollar spent", "The project is 90% complete", "The project is 10 days behind schedule"], a: 1 },
+                { q: "Earned Value (EV) is also known by the acronym __________.", o: ["BCWS", "ACWP", "BCWP", "EAC"], a: 2 },
+                { q: "Which of the following is an input required to calculate the Estimate at Completion (EAC)?", o: ["Actual Costs (AC) incurred to date", "The CEO's salary", "Competitor prices", "The original business case"], a: 0 },
+                { q: "Resource loading charts (or histograms) are used to display __________.", o: ["The project's cash flow", "Amount of a specific resource scheduled over time", "Hierarchical structure of the team", "Logical relationship between tasks"], a: 1 }
+            ],
+            7: [
+                { q: "Cutting a project's budget sufficiently to stop progress without actually killing the project is closure by __________.", o: ["addition", "extinction", "starvation", "subtraction"], a: 2 },
+                { q: "Which of the following is an example of 'scope creep'?", o: ["A formally approved change order", "Gradual, uncontrolled additions to project requirements", "Reducing the project budget", "Closing the project early"], a: 1 },
+                { q: "A standard for performance, commonly established early on for later comparisons, is defined as a __________.", o: ["Audit", "Baseline", "Evaluation", "Summary"], a: 1 },
+                { q: "If a project is a major success and is terminated by institutionalising it as a formal part of the parent organisation, this is closure by __________.", o: ["integration", "addition", "murder", "starvation"], a: 1 },
+                { q: "Which is NOT one of the primary targets of project control?", o: ["Cost", "Time", "Scope/Performance", "Office Politics"], a: 3 },
+                { q: "The __________ process controls the project at various points in the life cycle (go/no-go decisions) to make sure it remains on course.", o: ["portfolio", "phased-step", "phase-gate", "overarching"], a: 2 },
+                { q: "Which of the following is NOT one of the three types of project control processes?", o: ["Cybernetic control", "Robotic control", "Go/no-go control", "Post-control"], a: 1 },
+                { q: "Which of the following is NOT a common task for a project closure manager?", o: ["Ensuring completion of the work", "Redistributing personnel and materials", "Communicating to stakeholders why the project was a failure", "Overseeing the closing of the project's books"], a: 2 },
+                { q: "For a project audit team to conduct an evaluation with skill, which condition is NOT mandatory?", o: ["Proper selection of the team", "Setting a schedule convenient ONLY for the auditors", "Accessibility to all records", "Free contact with project members"], a: 1 },
+                { q: "Control is focused on three primary elements of a project: __________.", o: ["scope, quality, and customer satisfaction", "performance, delivery, and cost", "scope, cost, and time", "cost, time, and customer satisfaction"], a: 2 },
+                { q: "The section of an audit report that contains a description of the project to provide a framework is the __________ section.", o: ["Current status", "Future project status", "Introduction", "Risk management"], a: 2 },
+                { q: "A project is terminated by 'extinction' when __________.", o: ["It is starved of resources", "It is successfully completed or cancelled and activity ceases", "It becomes a new department", "It is merged with another project"], a: 1 },
+                { q: "Cybernetic control in project management functions primarily through __________.", o: ["Automatic feedback loops to steer the system", "Rigid, inflexible rules", "Constant human micromanagement", "Financial audits alone"], a: 0 },
+                { q: "A post-project evaluation report is primarily designed to __________.", o: ["Punish team members", "Provide recommendations for improving future projects (Lessons Learned)", "Justify budget overruns", "Legally protect the PM"], a: 1 },
+                { q: "The most effective way to control scope creep is through a formal __________.", o: ["Change control system", "Firing process", "Budget reduction", "Daily stand-up meeting"], a: 0 },
+                { q: "An 'in-process' project audit is usually conducted to __________.", o: ["Evaluate the final product", "Check if project is progressing as planned and apply corrective actions", "Assign blame for delays", "Close the accounts"], a: 1 },
+                { q: "A key essential of a successful audit/evaluation is that the auditor must remain __________.", o: ["Subjective and biased", "Objective and independent", "Aggressive towards the team", "Ignorant of technical details"], a: 1 },
+                { q: "Closure by 'integration' is typically the most complex termination mode because __________.", o: ["The project failed completely", "Project assets and personnel must be absorbed back into parent organization operations", "The budget was starved", "It requires legal action"], a: 1 },
+                { q: "The 'Baseline' of a project typically includes the approved __________.", o: ["Scope, Schedule, and Cost", "Team roster and salaries", "List of risks", "Vendor contracts only"], a: 0 },
+                { q: "When a project is closed, the final administrative task is often to __________.", o: ["Start a new project", "Archive project records and release the team", "Ask the client for more money", "Change the baseline"], a: 1 }
+            ],
+            8: [
+                { q: "Realizing the actual value and returns the project was undertaken to create is called __________.", o: ["Cost-benefit analysis", "Benefits realisation", "Project auditing", "Value engineering"], a: 1 },
+                { q: "In the Chandrayaan-3 case study, the ultimate success was heavily reliant on learning from __________.", o: ["Chandrayaan-1", "Chandrayaan-2 failures", "Apollo 11", "Mangalyaan"], a: 1 },
+                { q: "Which software is traditionally widely used for project scheduling and Gantt chart creation?", o: ["Photoshop", "MS Project", "AutoCAD", "QuickBooks"], a: 1 },
+                { q: "Agile software teams commonly use tools like __________ for tracking Sprints and Backlogs.", o: ["Jira", "Excel", "SAP", "Oracle DB"], a: 0 },
+                { q: "Simulation software like @RISK uses techniques such as __________ to predict project outcomes.", o: ["Monte Carlo simulation", "Linear programming", "HTML coding", "Database indexing"], a: 0 },
+                { q: "Benefits realization management typically extends __________.", o: ["Only through the planning phase", "Only until the project handover", "Beyond the project closure into the operational phase", "Only during the feasibility study"], a: 2 },
+                { q: "A major advantage of using specialized project management software is its ability to __________.", o: ["Write the project code automatically", "Provide real-time collaboration, tracking, and reporting", "Eliminate the need for a PM", "Guarantee project success"], a: 1 },
+                { q: "The Chandrayaan-3 mission success is a prime example of effective __________.", o: ["Scope creep", "Risk management and iterative improvement", "Resource starvation", "Closure by addition"], a: 1 },
+                { q: "In project management software, a 'Dashboard' is used to __________.", o: ["Store employee passwords", "Provide a high-level, visual summary of project KPIs and health", "Calculate employee taxes", "Design the product UI"], a: 1 },
+                { q: "To generate accurate Earned Value Management (EVM) metrics, project software requires accurate __________.", o: ["Weather forecasts", "Baseline data and regular actual cost/progress updates", "Stock market prices", "Hardware specifications"], a: 1 },
+                { q: "A 'Lesson Learned' document is an essential outcome of project closure because it __________.", o: ["Assigns blame for failures", "Captures knowledge to improve the success rate of future projects", "Is required for tax purposes", "Determines team bonuses"], a: 1 },
+                { q: "Enterprise Project Management (EPM) software suites differ from basic tools because they offer __________.", o: ["Word processing", "Portfolio-level management across multiple projects and resources", "Basic to-do lists", "Email hosting"], a: 1 },
+                { q: "The primary purpose of using IT in project management is to __________.", o: ["Replace human decision-making entirely", "Facilitate communication, reduce errors, and handle complex calculations", "Increase the project budget", "Make the project look modern"], a: 1 },
+                { q: "Which feature in MS Project automatically adjusts task dates based on dependencies when a predecessor task is delayed?", o: ["Resource levelling", "Auto-scheduling engine", "Cost calculation", "WBS numbering"], a: 1 },
+                { q: "The 'Chandrayaan-3' mission successfully demonstrated the project management principle of __________.", o: ["Ignoring risks to save money", "Robust testing, contingency planning, and failure analysis", "Skipping the planning phase", "Using outdated technology"], a: 1 },
+                { q: "When a project manager evaluates the success of a project, they should primarily look at whether it __________.", o: ["Was completely stress-free", "Met its business case objectives and delivered intended benefits", "Used the newest software", "Finished without any change requests"], a: 1 },
+                { q: "Project management software helps combat 'information silos' by __________.", o: ["Creating a centralized, single source of truth for all project data", "Restricting access to only the PM", "Deleting old emails", "Printing daily reports"], a: 0 },
+                { q: "A key component of Benefits Realization is assigning a 'Benefits Owner' responsible for __________.", o: ["Funding the project", "Ensuring the expected business value is actually achieved after handover", "Writing the code", "Auditing the finances"], a: 1 },
+                { q: "In summary, modern Project Management is best described as the application of __________ to meet project requirements.", o: ["Only financial accounting", "Knowledge, skills, tools, and techniques", "Strict authority and discipline", "Guesswork and luck"], a: 1 },
+                { q: "The ultimate goal of the entire project management lifecycle is to __________.", o: ["Keep people busy", "Deliver value to the organization and stakeholders", "Create endless documentation", "Win industry awards"], a: 1 }
+            ]
+        };
+
+        // --- EXAM LOGIC & STATE MANAGEMENT ---
+        let currentWeek = 1;
+        let questions = [];
+        let responses = []; // Stores { selected: index, status: 0-4 }
+        let qIndex = 0;
+        let timerInterval;
+        let reviewMode = false;
+
+        function startExam() {
+            document.getElementById('instructions-view').style.display = 'none';
+            document.getElementById('exam-view').style.display = 'flex';
+            startTimer(45 * 60); // 45 Minutes per module
+            changeWeek(); 
+        }
+
+        function changeWeek() {
+            if(reviewMode) return;
+            currentWeek = parseInt(document.getElementById('week-selector').value);
+            questions = db[currentWeek] || [];
+            
+            // Init state for the 20 questions
+            responses = Array.from({ length: questions.length }, () => ({ selected: null, status: 0 }));
+            qIndex = 0;
+            if(questions.length > 0) responses[0].status = 1; // First Q marked as visited (Not Answered)
+            
+            renderQuestion();
+            renderPalette();
+            updateSummary();
+        }
+
+        function renderQuestion() {
+            if(questions.length === 0) return;
+            const q = questions[qIndex];
+            const r = responses[qIndex];
+
+            document.getElementById('q-num-label').innerText = `Question ${qIndex + 1} of ${questions.length}`;
+            document.getElementById('q-text').innerText = q.q;
+
+            const optsDiv = document.getElementById('options-container');
+            optsDiv.innerHTML = '';
+
+            q.o.forEach((optText, i) => {
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'opt';
+                radio.value = i;
+                if(r.selected === i) radio.checked = true;
+                if(reviewMode) radio.disabled = true;
+
+                radio.onchange = () => { if(!reviewMode) responses[qIndex].selected = i; };
+
+                label.appendChild(radio);
+                label.innerHTML += `<span class="opt-text">${String.fromCharCode(65+i)}. ${optText}</span>`;
+
+                if(reviewMode) {
+                    if(i === q.a) label.classList.add('correct');
+                    else if(r.selected === i) label.classList.add('incorrect');
+                }
+
+                optsDiv.appendChild(label);
+            });
+
+            document.getElementById('q-area').scrollTop = 0;
+        }
+
+        function renderPalette() {
+            const grid = document.getElementById('palette-grid');
+            grid.innerHTML = '';
+            
+            questions.forEach((_, i) => {
+                const btn = document.createElement('div');
+                btn.className = `pal-btn st-${responses[i].status} ${i === qIndex ? 'active' : ''}`;
+                btn.innerText = i + 1;
+                btn.onclick = () => jumpTo(i);
+                grid.appendChild(btn);
+            });
+        }
+
+        function updateSummary() {
+            let counts = [0,0,0,0,0];
+            responses.forEach(r => counts[r.status]++);
+            for(let i=0; i<=4; i++) document.getElementById(`count-${i}`).innerText = counts[i];
+        }
+
+        function jumpTo(target) {
+            if(reviewMode) {
+                qIndex = target;
+                renderQuestion();
+                renderPalette();
+                return;
+            }
+
+            // If leaving without saving, wipe selection and set to Not Answered
+            if(responses[qIndex].status <= 1) {
+                responses[qIndex].selected = null;
+                responses[qIndex].status = 1;
+            }
+
+            qIndex = target;
+            if(responses[qIndex].status === 0) responses[qIndex].status = 1;
+
+            renderQuestion();
+            renderPalette();
+            updateSummary();
+        }
+
+        function handleAction(action) {
+            if(reviewMode) return;
+            const hasAns = responses[qIndex].selected !== null;
+
+            if(action === 'save') {
+                responses[qIndex].status = hasAns ? 2 : 1;
+            } else if(action === 'mark') {
+                responses[qIndex].status = hasAns ? 4 : 3;
+            } else if(action === 'clear') {
+                responses[qIndex].selected = null;
+                responses[qIndex].status = 1;
+                renderQuestion();
+                renderPalette();
+                updateSummary();
+                return;
+            }
+
+            if(qIndex < questions.length - 1) {
+                qIndex++;
+                if(responses[qIndex].status === 0) responses[qIndex].status = 1;
+            } else {
+                alert("You have reached the end of the module. Click 'Submit Exam' when ready.");
+            }
+
+            renderQuestion();
+            renderPalette();
+            updateSummary();
+        }
+
+        function startTimer(seconds) {
+            let t = seconds;
+            timerInterval = setInterval(() => {
+                let m = Math.floor(t / 60);
+                let s = t % 60;
+                document.getElementById('timer').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                if(--t < 0) {
+                    clearInterval(timerInterval);
+                    processSubmit();
+                }
+            }, 1000);
+        }
+
+        function submitExam() {
+            if(!reviewMode && confirm("Are you sure you want to submit? You cannot change your answers after submission.")) {
+                processSubmit();
+            }
+        }
+
+        function processSubmit() {
+            clearInterval(timerInterval);
+            document.getElementById('exam-view').style.display = 'none';
+            document.getElementById('result-view').style.display = 'flex';
+
+            let score = 0, attempted = 0;
+            responses.forEach((r, i) => {
+                if(r.status === 2 || r.status === 4) { // Answered or Ans+Marked
+                    attempted++;
+                    if(r.selected === questions[i].a) score++;
+                }
+            });
+
+            document.getElementById('res-score').innerText = `${score} / ${questions.length}`;
+            document.getElementById('res-total').innerText = questions.length;
+            document.getElementById('res-attempted').innerText = attempted;
+            document.getElementById('res-correct').innerText = score;
+            document.getElementById('res-incorrect').innerText = attempted - score;
+        }
+
+        function enterReviewMode() {
+            reviewMode = true;
+            document.getElementById('result-view').style.display = 'none';
+            document.getElementById('exam-view').style.display = 'flex';
+            
+            document.getElementById('week-selector').disabled = true;
+            document.getElementById('action-bar').style.display = 'none';
+            document.getElementById('btn-submit').style.display = 'none';
+            document.getElementById('timer').innerText = "REVIEW";
+            document.getElementById('timer').style.color = "var(--st-answered)";
+            document.getElementById('timer').style.borderColor = "var(--st-answered)";
+
+            qIndex = 0;
+            renderQuestion();
+            renderPalette();
+        }
+    </script>
+</body>
+</html>
